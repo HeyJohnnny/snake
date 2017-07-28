@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>贪吃蛇</title>
+	<style>
+		*{
+			margin:0px;
+			padding:0px;
+		}
+		body{
+			min-width: 1210px;
+			min-height:500px;
+			
+		}
+		#main{
+			float:left;
+			width: 90%;
+			border:5px solid;
+			height:500px;
+
+		}
+		.snake{
+			background: blue;
+		}
+		.food{
+			background: #66b317;
+		}
+		.start{
+			text-align: center;
+		}
+		.score{
+			/*background: red;*/
+			width: 8%;
+			height: 200px;
+			float: right;
+			overflow: hidden;
+			margin:0 3px;
+			
+		}
+		#showscore{
+			display: block;
+			font-size: 20px;
+			font-weight: bold;
+			text-align: center;
+
+		}
+		table{
+			border-collapse:collapse;
+		}
+		tr,td{
+			height: 19px;
+			width: 20px;
+			border:1px solid;
+			
+		}
+		#score{
+			
+			margin-top: 50px;
+			width: 90%;
+			height: 70px;
+		}
+		#start{
+			position: absolute;
+			left: 500px;
+			width:200px;
+			top:520px;
+			font-size: 30px;
+		}
+
+		#table{
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<div class = "score">
+		<label id = "showscore" >得分：</label>
+		<input type = "text" id = "score" disabled="true" value = "">
+	</div>
+	<div id = "main" > 
+	</div>
+	<button id = "start" value="">开始游戏</button> 
+
+
+	<script>
+		var stop;
+		var length;//蛇身长度
+		var arr = new Array();//存储蛇身id的数组
+		var x = 62; //横有62个框
+		var y = 25; //纵有25个框
+
+		/**
+		*已经完成好的功能：
+		*初始化格局
+		*随机生成食物（这个可能还需要完善） 出生点
+		*重新开始游戏
+		*
+		*/
+		function initGrid(width,height){
+			var main = document.getElementById("main");
+			var table = document.createElement("table")
+			var tbody = document.createElement("tbody");
+			for(var j = 0;j<height; j+=20){
+				var col = document.createElement("tr");
+				for(var i=0;i<width;i+=20){
+					console.log(i);
+					var row = document.createElement("td");
+					row.setAttribute("id",j/20*62+i/20);
+					col.appendChild(row);
+				}
+				tbody.appendChild(col);
+			}
+			table.appendChild(tbody);	
+			main.appendChild(table);		
+		}
+		function initP(){
+			var a = Math.random()*y;
+			a = Math.floor(a);
+			var b = Math.random()*x;
+			b = Math.floor(b);
+			var id = a*62+b;
+			return id;
+		}
+		
+		function food(){
+			var id = initP();
+			var p = document.getElementById(""+id);
+			while(p.className){
+				id = initP(); //实际上极少机会两次都重复
+				p = document.getElementById(""+id);
+			}
+			document.getElementById(""+id).setAttribute("class", "food"); 
+
+		}
+		function reset(){
+			var sum = x*y;
+			clearInterval(stop);
+			for(var i=0;i<sum;i++){
+				var a = document.getElementById(""+i);
+				if(a.className == "snake")                                         
+					a.className = a.className.replace(new RegExp("(\\s|^)" + "snake" + "(\\s|$)")," ");
+				if(a.className == "food")                                        
+					a.className = a.className.replace(new RegExp("(\\s|^)" + "food" + "(\\s|$)")," ");
+			}
+			document.getElementById("start").innerHTML = "开始游戏";
+		}
+		/**
+		*未完成功能
+		*蛇的的控制
+		*蛇生长
+		*判断死亡
+		*得分
+		*/
+		function start(){
+			arr.splice(0,arr.length);
+			var id = initP();
+			arr.push(id);
+			document.getElementById(""+id).setAttribute("class", "snake"); 
+			stop = setInterval(food,1000);
+			document.getElementById("start").innerHTML = "重新开始";
+		}
+
+		function keyDown(e){
+			/**
+			*默认是向右移动
+			*
+			*/	
+			var e = e||event;
+			var currKey;   // event.keyCode || e.which
+			currKey = e.keyCode||e.which||e.charCode;
+			switch(currKey){
+				case 37:       //left
+				case 65:move(1);break;
+				case 39:       //right
+				case 68:move(3);break;
+				case 38:       //up
+				case 87:move(2);break;
+				case 40:      //down
+				case 83:move(5);break;
+				default:break;
+			}
+		}
+		//先实现一键一步的功能
+		function move(dir){
+			var id = arr[0]; //获取蛇头的id
+			if(dir == 1){
+				if(id%62 == 0){
+					reset();
+				}
+				else {
+					document.getElementById(""+id-1).setAttribute("class", "snake");
+					arr[0] = id - 1; 
+				}
+			}
+		}
+
+		window.onload = function(){
+			
+			var width = document.getElementById("main").clientWidth;
+			console.log(width);
+			var height = document.getElementById("main").clientHeight;
+			console.log(height);
+			initGrid(width,height);
+			var a = true;
+			document.getElementById("start").onclick = function(){
+				if(a){
+					start();
+					
+					document.onkeydown = keyDown;
+				}
+				else{
+					document.onkeydown = null;
+					reset();
+
+				}
+				a = !a;
+			}
+		
+			
+		}
+	</script>
+</body>
+</html>
