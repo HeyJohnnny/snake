@@ -14,7 +14,7 @@
 			
 		}
 		#main{
-			float:left;
+			position: relative;
 			width: 90%;
 			border:5px solid;
 			height:500px;
@@ -46,6 +46,9 @@
 
 		}
 		table{
+			position: absolute;
+			left:0;
+			top:0;
 			border-collapse:collapse;
 		}
 		tr,td{
@@ -59,6 +62,10 @@
 			margin-top: 50px;
 			width: 90%;
 			height: 70px;
+			font-size: 35px;
+			color:red;
+			text-align: center;
+
 		}
 		#start{
 			position: absolute;
@@ -66,6 +73,7 @@
 			width:200px;
 			top:520px;
 			font-size: 30px;
+			
 		}
 
 		#table{
@@ -90,13 +98,14 @@
 		var arr = new Array();//存储蛇身id的数组
 		var x = 62; //横有62个框
 		var y = 25; //纵有25个框
-
+		var A = true;
 		/**
 		*已经完成好的功能：
 		*初始化格局
 		*随机生成食物（这个可能还需要完善） 出生点
 		*重新开始游戏
-		*
+		*得分 (剩下死亡时候的alert得分 并且可以新增一个记录)
+		*蛇的的控制
 		*/
 		function initGrid(width,height){
 			var main = document.getElementById("main");
@@ -105,7 +114,7 @@
 			for(var j = 0;j<height; j+=20){
 				var col = document.createElement("tr");
 				for(var i=0;i<width;i+=20){
-					console.log(i);
+					
 					var row = document.createElement("td");
 					row.setAttribute("id",j/20*62+i/20);
 					col.appendChild(row);
@@ -132,7 +141,6 @@
 				p = document.getElementById(""+id);
 			}
 			document.getElementById(""+id).setAttribute("class", "food"); 
-
 		}
 		function reset(){
 			var sum = x*y;
@@ -140,25 +148,30 @@
 			for(var i=0;i<sum;i++){
 				var a = document.getElementById(""+i);
 				if(a.className == "snake")                                         
-					a.className = a.className.replace(new RegExp("(\\s|^)" + "snake" + "(\\s|$)")," ");
+					a.className = a.className.replace(new RegExp("(\\s|^)" + "snake" + "(\\s|$)"),"");
 				if(a.className == "food")                                        
-					a.className = a.className.replace(new RegExp("(\\s|^)" + "food" + "(\\s|$)")," ");
+					a.className = a.className.replace(new RegExp("(\\s|^)" + "food" + "(\\s|$)"),"");
 			}
+			A = true;//使响应点击
+			document.getElementById("start").blur();//失去焦点
+			document.getElementById("score").value = "";
 			document.getElementById("start").innerHTML = "开始游戏";
+			
 		}
 		/**
-		*未完成功能
-		*蛇的的控制
+		*未完成功
+		*自动行走
 		*蛇生长
 		*判断死亡
-		*得分
+		*
 		*/
 		function start(){
 			arr.splice(0,arr.length);
 			var id = initP();
 			arr.push(id);
+			document.getElementById("score").value = 0;
 			document.getElementById(""+id).setAttribute("class", "snake"); 
-			stop = setInterval(food,1000);
+			stop = setInterval(food,2000);
 			document.getElementById("start").innerHTML = "重新开始";
 		}
 
@@ -175,50 +188,108 @@
 				case 65:move(1);break;
 				case 39:       //right
 				case 68:move(3);break;
-				case 38:       //up
+				case 38:       //down
 				case 87:move(2);break;
-				case 40:      //down
+				case 40:      //up
 				case 83:move(5);break;
 				default:break;
 			}
 		}
-		//先实现一键一步的功能
+		//先实现一键一步的功能 暂时实现一个小方框的上下左右移动(ok)
+
+		//完全实现
 		function move(dir){
 			var id = arr[0]; //获取蛇头的id
-			if(dir == 1){
+			var a = document.getElementById(""+id);
+			if(dir == 1){ //左边
 				if(id%62 == 0){
+					alert("碰到左边");
 					reset();
 				}
 				else {
-					document.getElementById(""+id-1).setAttribute("class", "snake");
+					a.className = a.className.replace(/snake/,"");
+					if(document.getElementById(""+(id-1)).className == "food")
+						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+					document.getElementById(""+(id-1)).setAttribute("class", "snake");
 					arr[0] = id - 1; 
+				}
+			}else if(dir == 5){ //下边  
+				if(parseInt(id/62) == 24){
+					alert("碰到下边");
+					reset();
+				}else{
+					a.className =  a.className.replace(/snake/," ");
+					if(document.getElementById(""+(id+62)).className == "food")
+						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+					document.getElementById(""+(id+62)).setAttribute("class", "snake");//会覆盖原来的class
+					arr[0] = id+62;
+				}
+			}else if(dir == 3){ //右边
+				if((id+1)%62== 0){
+					alert("碰到右边");
+					reset();
+				}else{
+					a.className =  a.className.replace(/snake/," ");//空不空没关系
+					if(document.getElementById(""+(id+1)).className == "food")
+						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+					document.getElementById(""+(id+1)).setAttribute("class", "snake");
+					
+					arr[0] = id+1;
+				}
+			}else if(dir == 2){ //上边
+				if(id < 62){
+					alert("碰到上边");
+					reset();
+				}else{
+					a.className =  a.className.replace(/snake/,"");
+					if(document.getElementById(""+(id-62)).className == "food")
+						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+					document.getElementById(""+(id-62)).setAttribute("class", "snake");
+					
+					arr[0] = id-62;
 				}
 			}
 		}
+		//判断死亡
+		function dead(dir){
+			if(dir == 1){
+
+			}
+			else if(dir == 2){
+
+			}
+			else if(dir == 3){
+
+			}
+			else if(dir == 5){
+
+			}
+		}
+		//吃食物成长
+		function grow(){
+
+		}
+
 
 		window.onload = function(){
-			
 			var width = document.getElementById("main").clientWidth;
 			console.log(width);
 			var height = document.getElementById("main").clientHeight;
 			console.log(height);
 			initGrid(width,height);
-			var a = true;
 			document.getElementById("start").onclick = function(){
-				if(a){
+				if(A){
 					start();
-					
-					document.onkeydown = keyDown;
+					document.onkeydown = keyDown;	
+					A = false;
 				}
 				else{
 					document.onkeydown = null;
 					reset();
-
+					A = true;
 				}
-				a = !a;
-			}
-		
-			
+				
+			}	
 		}
 	</script>
 </body>
