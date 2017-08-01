@@ -93,18 +93,22 @@
 
 
 	<script>
-		var stop;
+		var stop;//停止食物产生
+		var moveon; //停止此时方向上的动作
 		var length;//蛇身长度
 		var arr = new Array();//存储蛇身id的数组
 		var x = 62; //横有62个框
 		var y = 25; //纵有25个框
 		var A = true;
+		var z;//这个是判断不能重复按键
+		var D;
 		/**
 		*已经完成好的功能：
 		*初始化格局
 		*随机生成食物（这个可能还需要完善） 出生点
 		*重新开始游戏
 		*得分 (剩下死亡时候的alert得分 并且可以新增一个记录)
+		*判断死亡(撞墙)
 		*蛇的的控制
 		*/
 		function initGrid(width,height){
@@ -152,6 +156,7 @@
 				if(a.className == "food")                                        
 					a.className = a.className.replace(new RegExp("(\\s|^)" + "food" + "(\\s|$)"),"");
 			}
+			clearInterval(moveon);
 			A = true;//使响应点击
 			document.getElementById("start").blur();//失去焦点
 			document.getElementById("score").value = "";
@@ -159,16 +164,17 @@
 			
 		}
 		/**
-		*未完成功
+		*完成
 		*自动行走
 		*蛇生长
-		*判断死亡
+		*判断死亡(撞到自己)
 		*
 		*/
 		function start(){
 			arr.splice(0,arr.length);
 			var id = initP();
 			arr.push(id);
+			D = 150;
 			document.getElementById("score").value = 0;
 			document.getElementById(""+id).setAttribute("class", "snake"); 
 			stop = setInterval(food,2000);
@@ -185,89 +191,123 @@
 			currKey = e.keyCode||e.which||e.charCode;
 			switch(currKey){
 				case 37:       //left
-				case 65:move(1);break;
+				case 65:if(z == 1) break; if(z == 2){alert("GG");reset();break;}z=1;clearInterval(moveon);moveon=setInterval(function(){ move(1);},D);break;
 				case 39:       //right
-				case 68:move(3);break;
+				case 68:if(z == 2) break; if(z == 1){alert("GG");reset();break;}z=2;clearInterval(moveon);moveon=setInterval(function(){ move(3);},D);break;
 				case 38:       //down
-				case 87:move(2);break;
+				case 87:if(z == 3) break; if(z == 4){alert("GG");reset();break;}z=3;clearInterval(moveon);moveon=setInterval(function(){ move(2);},D);break;
 				case 40:      //up
-				case 83:move(5);break;
+				case 83:if(z == 4) break; if(z == 3){alert("GG");reset();break;}z=4;clearInterval(moveon);moveon=setInterval(function(){ move(5);},D);break;
 				default:break;
 			}
 		}
 		//先实现一键一步的功能 暂时实现一个小方框的上下左右移动(ok)
 
 		//完全实现
+		/*
+		*这里只是实现了单个小块的上下左右移动 所以下面的代码只是一部分
+		*
+		*
+		*/
 		function move(dir){
+
 			var id = arr[0]; //获取蛇头的id
-			var a = document.getElementById(""+id);
 			if(dir == 1){ //左边
-				if(id%62 == 0){
-					alert("碰到左边");
+				if(dead(dir,id) == 1){
+					alert("GG");
 					reset();
 				}
 				else {
-					a.className = a.className.replace(/snake/,"");
-					if(document.getElementById(""+(id-1)).className == "food")
-						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
-					document.getElementById(""+(id-1)).setAttribute("class", "snake");
-					arr[0] = id - 1; 
+					/*这就是出队的过程
+						a.className = a.className.replace(/snake/,"");
+					*/
+					id = id-1;
+					//表示吃到食物
+					// if(document.getElementById(""+(id-1)).className == "food")
+					// 	document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+					//会将原来的food类名全部替换为snake类
+					// document.getElementById(""+(id-1)).setAttribute("class", "snake");
+					//之后直接封装起来 用 grow()函数表示
+					arr.unshift(id);
+					grow(id);
 				}
 			}else if(dir == 5){ //下边  
-				if(parseInt(id/62) == 24){
-					alert("碰到下边");
+				if(dead(dir,id) == 1){
+					alert("GG");
 					reset();
 				}else{
-					a.className =  a.className.replace(/snake/," ");
-					if(document.getElementById(""+(id+62)).className == "food")
-						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
-					document.getElementById(""+(id+62)).setAttribute("class", "snake");//会覆盖原来的class
-					arr[0] = id+62;
+					id = id+62;
+					arr.unshift(id);
+					grow(id);
+					// moveon =setTimeout(move(5),1000);
 				}
 			}else if(dir == 3){ //右边
-				if((id+1)%62== 0){
-					alert("碰到右边");
+				if(dead(dir,id) == 1){
+					alert("GG");
 					reset();
 				}else{
-					a.className =  a.className.replace(/snake/," ");//空不空没关系
-					if(document.getElementById(""+(id+1)).className == "food")
-						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
-					document.getElementById(""+(id+1)).setAttribute("class", "snake");
 					
-					arr[0] = id+1;
+					id = id+1;
+					arr.unshift(id);
+					grow(id);
+					// moveon =setTimeout(move(3),3000);
 				}
 			}else if(dir == 2){ //上边
-				if(id < 62){
-					alert("碰到上边");
+				if(dead(dir,id) == 1){
+					alert("GG");
 					reset();
 				}else{
-					a.className =  a.className.replace(/snake/,"");
-					if(document.getElementById(""+(id-62)).className == "food")
-						document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
-					document.getElementById(""+(id-62)).setAttribute("class", "snake");
 					
-					arr[0] = id-62;
+					id = id-62;
+					arr.unshift(id);
+					grow(id);
+					// moveon =setTimeout(move(2),3000);
 				}
 			}
 		}
-		//判断死亡
-		function dead(dir){
+		//判断死亡    死亡是1
+		//封装上面的死亡的情况
+		//包括撞到墙壁或者撞到自己
+		function dead(dir,id){
 			if(dir == 1){
-
+				if(id%62 == 0)
+					return 1;
+				if(arr.indexOf(id-1) != -1)//在身体上查找到了 表示撞到身体
+					return 1;
 			}
 			else if(dir == 2){
-
+				if(id<62)
+					return 1;
+				if(arr.indexOf(id-62) != -1)
+					return 1;
 			}
 			else if(dir == 3){
+				if((id+1)%62== 0)
+					return 1;
 
+				if(arr.indexOf(id+1) != -1)
+					return 1;
 			}
 			else if(dir == 5){
-
+				if(parseInt(id/62) == 24)
+					return 1;
+				if(arr.indexOf(id+62) != -1)
+					return 1;
 			}
+			return 0;
 		}
 		//吃食物成长
-		function grow(){
-
+		function grow(id){
+			//如果有食物 就生长
+			if(document.getElementById(""+id).className == "food"){
+				document.getElementById("score").value =parseInt(document.getElementById("score").value)+10;
+			}else{
+				var a = arr.pop();
+				document.getElementById(""+a).className = document.getElementById(""+a).className.replace(/snake/,"");
+			}
+			for(var i = 0; i <arr.length; i++){
+				document.getElementById(""+arr[i]).setAttribute("class", "snake");
+			}
 		}
 
 
